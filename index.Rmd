@@ -1,0 +1,184 @@
+---
+title: "El lenguaje de programación R - Datos vectoriales - operaciones espaciales"
+author: "Manuel Vargas"
+date: "2020-06-01"
+output:
+  html_document:
+    theme: readable    
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false    
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Recursos de interés
+* [Geocomputation with R - Chapter 4 Spatial data operations](https://geocompr.robinlovelace.net/attr.html)
+
+* Sitio web del curso: [GF-0604: Procesamiento de datos geográficos](https://geoprocesamiento-2020i.github.io/).
+* Datos utilizados durante el curso: [Datos del curso GF-0604: Procesamiento de datos geográficos](https://github.com/geoprocesamiento-2020i/datos).
+
+## Preparativos
+Paquetes y datos para ejemplos:
+```{r message = FALSE}
+# Paquete para manejo de datos vectoriales
+library(sf)
+
+# Paquete de Tidyverse para manipulación de datos
+library(dplyr)
+
+# Paquete con conjuntos de datos geoespaciales
+library(spData)
+
+# Paquete para mapas en la Web
+library(leaflet)
+```
+
+Adicionalmente, se utilizan algunas capas geoespaciales de la [Infraestructura Nacional de Datos Espaciales de Costa Rica (SNIT)](http://www.snitcr.go.cr/):
+```{r message=FALSE, warning=FALSE, results='hide'}
+# URL base del servicio WFS IGN 1:5mil
+url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
+
+# URL base del servicio WFS IGN 1:200mil
+url_base_wfs_ign_200mil <- "http://geos.snitcr.go.cr/be/IGN_200/wfs?"
+
+# URL base del servicio WFS del Sinac
+url_base_wfs_sinac <- "http://geos1pne.sirefor.go.cr/wfs?"
+
+# URL de las solicitudes de las capas
+solicitud_provincias_wfs <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limiteprovincial_5k&outputFormat=application/json"
+solicitud_aerodromos_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:aerodromos_200k&outputFormat=application/json"
+solicitud_redvial_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:redvial_200k&outputFormat=application/json"
+solicitud_asp_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=PNE:areas_silvestres_protegidas&outputFormat=application/json"
+
+# Recuperación y simplificación de las capas
+# Provincias de Costa Rica
+cr_provincias <-
+  st_read(paste0(url_base_wfs_ign_5mil, solicitud_provincias_wfs)) %>%
+  st_simplify(dTolerance = 1000)
+
+# Áreas silvestres protegidas (ASP) de Costa Rica
+cr_asp <-
+  st_read(paste0(url_base_wfs_sinac, solicitud_asp_wfs)) %>%
+  st_simplify(dTolerance = 1000)
+
+# Red vial de Costa Rica
+cr_redvial <-
+  st_read(paste0(url_base_wfs_ign_200mil, solicitud_redvial_wfs)) %>%
+  st_simplify(dTolerance = 1000)
+
+# Aeródromos de Costa Rica
+cr_aerodromos <-
+  st_read(paste0(url_base_wfs_ign_200mil, solicitud_aerodromos_wfs))
+```
+
+También se incorpora una capa con registros de presencia de especies de _Reptilia_ (clase de los reptiles), en formato CSV, con datos agrupados por la [Infraestructura Mundial de Información en Biodiversidad (GBIF)](https://www.gbif.org/):
+```{r warning=FALSE, results='hide'}
+# Reptiles de Costa Rica
+cr_reptilia <- 
+  st_read(
+    "https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/biodiversidad/registros-presencia/cr/cr-reptilia.csv", 
+    options=c("X_POSSIBLE_NAMES=decimalLongitude","Y_POSSIBLE_NAMES=decimalLatitude")
+  ) %>%
+  st_set_crs(4326) %>% 
+  st_transform(5367)
+```
+
+Visualización de las capas (1):
+```{r}
+# Visualización de las capas (1)
+plot(cr_provincias$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(cr_redvial$geometry, col="grey", lwd=0.2, add=TRUE)
+plot(cr_aerodromos$geometry, col="orange", pch=16, add=TRUE)
+```
+
+Visualización de las capas (2):
+```{r}
+# Visualización de las capas (2)
+plot(cr_asp$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(cr_reptilia$geometry, col="green", pch=16, cex=0.1, add=TRUE)
+```
+
+
+## Introducción
+Esta lección brinda una visión general de las operaciones espaciales en datos vectoriales del paquete [sf](https://r-spatial.github.io/sf/articles/sf1.html). Estas operaciones incluyen **creación de subconjuntos espaciales (_spatial subsetting_)**, **agregación espacial (_spatial aggregation_)** y **cruce de datos espaciales (_spatial joining_)**.
+
+## Creación de subconjuntos espaciales
+Es el proceso de seleccionar objetos espaciales basados en su relación con otros objetos espaciales. Esta relación puede ser de intersección, contención, "roce" (_touch_), entre otras.
+
+En el siguiente ejemplo, se seleccionan los puntos contenidos en un polígono:
+```{r}
+# Aeródromos en Limón
+
+# Geometría (polígonos) de la provincia de Limón
+limon <-
+  cr_provincias %>%
+  filter(provincia == "Limón")
+
+# Geometrías (puntos) de aeródromos contenidos en la geometría de Limón
+aerodromos_limon <- cr_aerodromos[limon, , op = st_within]
+
+# Mapeo
+plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(aerodromos_limon$geometry, col="orange", pch=16, add=TRUE)
+```
+
+En el siguiente ejemplo, se seleccionan los polígonos contenidos en otro polígono:
+```{r}
+# ASP contenidas en Limón
+
+# Geometría (polígonos) de la provincia de Limón
+limon <-
+  cr_provincias %>%
+  filter(provincia == "Limón")
+
+# Geometrías (polígonos) de ASP contenidos en la geometría de Limón
+asp_limon <- cr_asp[limon, , op = st_within]
+
+# Mapeo
+plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(asp_limon$geometry, col="green", add=TRUE)
+
+# Nombres de las ASP
+asp_limon  %>%
+st_drop_geometry() %>%
+distinct(asp_limon$nombre_asp)
+```
+
+La función ```st_within()``` es una de las que se conoce como un [predicado geométrico binario](https://r-spatial.github.io/sf/reference/geos_binary_pred.html). Estas funciones relacionan, de diferentes maneras, dos conjuntos de geometrías.
+
+Nótese la diferencia al usar la función ```st_intersects()``` en lugar de ```st_within()```:
+```{r}
+# ASP que se intersecan con la provincia de Limón
+
+# Geometrías (polígonos) de ASP que se intersecan en la geometría de Limón
+asp_limon <- cr_asp[limon, , op = st_intersects]
+
+# Mapeo
+plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(asp_limon$geometry, col="green", add=TRUE)
+
+# Nombres de las ASP
+asp_limon  %>%
+st_drop_geometry() %>%
+distinct(asp_limon$nombre_asp)
+```
+Sugerencia: pruebe el ejemplo anterior con las funciones ```st_overlaps()```, ```st_disjoint()``` y ```st_touches()```.
+
+
+## Ejercicios
+1. Despliegue la lista de especies de [vipéridos](https://en.wikipedia.org/wiki/Viperidae) (familia _Viperidae_) reportados en la provincia de Guanacaste. Despliegue también el mapa con las localidades.
+
+```{r}
+```
+
+2. Presente el resultado anterior en un mapa de Leaflet.
+
+```{r}
+```
