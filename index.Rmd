@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Recursos de interés
-* [Geocomputation with R - Chapter 4 Spatial data operations](https://geocompr.robinlovelace.net/attr.html)
+* [Geocomputation with R - Chapter 4 Spatial data operations](https://geocompr.robinlovelace.net/spatial-operations.html)
 
 * Sitio web del curso: [GF-0604: Procesamiento de datos geográficos](https://geoprocesamiento-2020i.github.io/).
 * Datos utilizados durante el curso: [Datos del curso GF-0604: Procesamiento de datos geográficos](https://github.com/geoprocesamiento-2020i/datos).
