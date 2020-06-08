@@ -115,7 +115,7 @@ plot(cr_reptilia$geometry, col="green", pch=16, cex=0.1, add=TRUE)
 ## Introducción
 Esta lección brinda una visión general de las operaciones espaciales en datos vectoriales del paquete [sf](https://r-spatial.github.io/sf/articles/sf1.html). Estas operaciones incluyen **creación de subconjuntos espaciales (_spatial subsetting_)**, **agregación espacial (_spatial aggregation_)** y **cruce de datos espaciales (_spatial joining_)**.
 
-## Creación de subconjuntos espaciales
+## Creación de subconjuntos
 Es el proceso de seleccionar objetos espaciales basados en su relación con otros objetos espaciales. Esta relación puede ser de intersección, contención, "roce" (_touch_), entre otras.
 
 En el siguiente ejemplo, se seleccionan los puntos contenidos en un polígono:
