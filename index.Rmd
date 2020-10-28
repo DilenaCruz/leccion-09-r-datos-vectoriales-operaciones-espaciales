@@ -1,7 +1,7 @@
 ---
-title: "El lenguaje de programación R - Datos vectoriales - operaciones espaciales"
+title: "El lenguaje de programación R - Datos vectoriales - operaciones con datos espaciales"
 author: "Manuel Vargas"
-date: "2020-06-01"
+date: "2020-10-28"
 output:
   html_document:
     theme: readable    
@@ -18,11 +18,14 @@ library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Recursos de interés
-* [Geocomputation with R - Chapter 4 Spatial data operations](https://geocompr.robinlovelace.net/spatial-operations.html)
+El código fuente de este documento está disponible en [https://github.com/pf0953-programaciongeoespacialr-2020/leccion-09-r-datos-vectoriales-operaciones-espaciales](https://github.com/pf0953-programaciongeoespacialr-2020/leccion-09-r-datos-vectoriales-operaciones-espaciales).
 
-* Sitio web del curso: [GF-0604: Procesamiento de datos geográficos](https://geoprocesamiento-2020i.github.io/).
-* Datos utilizados durante el curso: [Datos del curso GF-0604: Procesamiento de datos geográficos](https://github.com/geoprocesamiento-2020i/datos).
+## Recursos de interés
+* Sitio web del curso: [PF0953 Programación geoespacial en R](https://pf0953-programaciongeoespacialr-2020.github.io/)
+* Datos utilizados en el curso: [Datos del curso PF0953 Programación geoespacial en R](https://github.com/pf0953-programaciongeoespacialr-2020/datos)
+* [Geocomputation with R - Chapter 4 Spatial data operations](https://geocompr.robinlovelace.net/spatial-operations.html)
+* Sitio web del paquete sf: [Simple Features for R - sf](https://r-spatial.github.io/sf/)
+* Documentación del paquete dplyr de Tidyverse: [A Grammar of Data Manipulation - dplyr](https://dplyr.tidyverse.org/)
 
 ## Preparativos
 Paquetes y datos para ejemplos:
@@ -52,11 +55,20 @@ url_base_wfs_ign_200mil <- "http://geos.snitcr.go.cr/be/IGN_200/wfs?"
 url_base_wfs_sinac <- "http://geos1pne.sirefor.go.cr/wfs?"
 
 # URL de las solicitudes de las capas
-solicitud_provincias_wfs <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limiteprovincial_5k&outputFormat=application/json"
-solicitud_cantones_wfs <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
-solicitud_aerodromos_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:aerodromos_200k&outputFormat=application/json"
-solicitud_redvial_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:redvial_200k&outputFormat=application/json"
-solicitud_asp_wfs <- "request=GetFeature&service=WFS&version=1.0.0&typename=PNE:areas_silvestres_protegidas&outputFormat=application/json"
+solicitud_provincias_wfs <- 
+  "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limiteprovincial_5k&outputFormat=application/json"
+
+solicitud_cantones_wfs <- 
+  "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
+
+solicitud_aerodromos_wfs <- 
+  "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:aerodromos_200k&outputFormat=application/json"
+
+solicitud_redvial_wfs <- 
+  "request=GetFeature&service=WFS&version=1.0.0&typename=IGN_200:redvial_200k&outputFormat=application/json"
+
+solicitud_asp_wfs <- 
+  "request=GetFeature&service=WFS&version=1.0.0&typename=PNE:areas_silvestres_protegidas&outputFormat=application/json"
 
 # Recuperación y simplificación de las capas
 # Provincias de Costa Rica
@@ -89,7 +101,7 @@ También se incorpora una capa con registros de presencia de especies de _Reptil
 # Reptiles de Costa Rica
 cr_reptilia <- 
   st_read(
-    "https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/biodiversidad/registros-presencia/cr/cr-reptilia.csv", 
+    "https://raw.githubusercontent.com/pf0953-programaciongeoespacialr-2020/datos/master/biodiversidad/registros-presencia/cr/cr-reptilia.csv", 
     options=c("X_POSSIBLE_NAMES=decimalLongitude","Y_POSSIBLE_NAMES=decimalLatitude")
   ) %>%
   st_set_crs(4326) %>% 
