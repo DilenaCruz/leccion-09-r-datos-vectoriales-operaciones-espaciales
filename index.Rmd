@@ -1,6 +1,6 @@
 ---
 title: "El lenguaje de programación R - Datos vectoriales - operaciones con datos espaciales"
-author: "Manuel Vargas"
+author: "María Dilena Cruz Fernández"
 date: "2020-10-28"
 output:
   html_document:
@@ -106,7 +106,7 @@ cr_reptilia <-
       "X_POSSIBLE_NAMES=decimalLongitude",
       "Y_POSSIBLE_NAMES=decimalLatitude"
     )
-  ) %>%
+  ) %>% # estos son los  comandos para delimitar o transformar el sistema de coordenadas de las capas
   st_set_crs(4326) %>% 
   st_transform(5367)
 ```
@@ -116,7 +116,7 @@ Visualización de las capas (1):
 # Visualización de las capas (1)
 plot(cr_provincias$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
 plot(cr_redvial$geometry, col="grey", lwd=0.2, add=TRUE)
-plot(cr_aerodromos$geometry, col="orange", pch=16, add=TRUE)
+plot(cr_aerodromos$geometry, col="blue", pch=16, add=TRUE)
 ```
 
 Visualización de las capas (2):
@@ -142,12 +142,14 @@ limon <-
   cr_provincias %>%
   filter(provincia == "Limón")
 
+plot(limon$geometry)
+
 # Geometrías (puntos) de aeródromos contenidos en la geometría de Limón
 aerodromos_limon <- cr_aerodromos[limon, , op = st_within]
 
 # Mapeo
 plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
-plot(aerodromos_limon$geometry, col="orange", pch=16, add=TRUE)
+plot(aerodromos_limon$geometry, col="blue", pch=16, add=TRUE)
 ```
 
 En el siguiente ejemplo, se seleccionan los polígonos contenidos en otro polígono:
@@ -164,7 +166,7 @@ asp_limon <- cr_asp[limon, , op = st_within]
 
 # Mapeo
 plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
-plot(asp_limon$geometry, col="green", add=TRUE)
+plot(asp_limon$geometry, col="darkgreen", add=TRUE)
 
 # Nombres de las ASP
 asp_limon %>%
@@ -189,6 +191,7 @@ plot(asp_limon$geometry, col="green", add=TRUE)
 asp_limon %>%
   st_drop_geometry() %>%
   distinct(asp_limon$nombre_asp)
+
 ```
 Sugerencia: pruebe el ejemplo anterior con las funciones ```st_overlaps()```, ```st_disjoint()``` y ```st_touches()```.
 
@@ -270,6 +273,30 @@ guanacaste_viperidae  %>%
   distinct(guanacaste_viperidae$species)
 ```
 
+
+```{r}
+alajuela_heredia <-
+  cr_provincias %>%
+  filter(provincia == "Alajuela" | provincia == "Heredia")
+
+
+cr_colubridae <-
+  cr_reptilia %>%
+  filter(family == "Colubridae")
+
+alaj_herd_colubridae <- cr_colubridae[alajuela_heredia, , op = st_within]
+
+plot(alajuela_heredia$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(alaj_herd_colubridae$geometry, col="brown", pch=4, add=TRUE)
+
+
+alaj_herd_colubridae  %>%
+  st_drop_geometry() %>%
+  distinct(alaj_herd_colubridae$species)
+```
+
+
+
 2. Presente el resultado anterior en un mapa de Leaflet.
 
 ```{r}
@@ -287,7 +314,8 @@ m <- leaflet() %>%
                    fillColor = 'red',
                    fillOpacity = 1,
                    popup = paste(guanacaste_viperidae_wgs84$genus, 
-                                 guanacaste_viperidae_wgs84$species, 
+                                 guanacaste_viperidae_wgs84$species,
+                                 guanacaste_viperidae_wgs84$eventDate, 
                                  sep = '<br/>')
                    ) %>%
   addLayersControl(baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "Imágenes de ESRI")) %>%
@@ -302,9 +330,10 @@ m
 3. Repita el ejercicio de agregar el nombre del cantón a los registros de _Bothrops asper_, de manera que se incluyan solamente los registros en los que hay conincidencia (_match_).
 
 ```{r}
+
 ```
 
-3. Repita el ejercicio de agregar los datos de los sitios altos de Nueva Zelanda, pero de acuerdon con el valor máximo.
+3. Repita el ejercicio de agregar los datos de los sitios altos de Nueva Zelanda, pero de acuerdo con el valor máximo.
 
 ```{r}
 ```
