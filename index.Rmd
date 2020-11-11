@@ -179,6 +179,7 @@ La función ```st_within()``` es una de las que se conoce como un [predicado geo
 Nótese la diferencia al usar la función ```st_intersects()``` en lugar de ```st_within()```:
 ```{r}
 # ASP que se intersecan con la provincia de Limón
+# el parámetro intersects muestra tanto los polígonos que están parcialmente contenidos como los que contiene en su totalidad
 
 # Geometrías (polígonos) de ASP que se intersecan en la geometría de Limón
 asp_limon <- cr_asp[limon, , op = st_intersects]
@@ -191,6 +192,24 @@ plot(asp_limon$geometry, col="green", add=TRUE)
 asp_limon %>%
   st_drop_geometry() %>%
   distinct(asp_limon$nombre_asp)
+
+
+#Usando overlaps, incluye los polígonos que está parcialmente contenidos
+
+# ASP que se intersecan con la provincia de Limón
+
+# Geometrías (polígonos) de ASP que se intersecan en la geometría de Limón
+asp_limon <- cr_asp[limon, , op = st_overlaps]
+
+# Mapeo
+plot(limon$geometry, axes=TRUE, graticule=TRUE, reset=FALSE)
+plot(asp_limon$geometry, col="green", add=TRUE)
+
+# Nombres de las ASP
+asp_limon %>%
+  st_drop_geometry() %>%
+  distinct(asp_limon$nombre_asp)
+
 
 ```
 Sugerencia: pruebe el ejemplo anterior con las funciones ```st_overlaps()```, ```st_disjoint()``` y ```st_touches()```.
